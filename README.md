@@ -43,7 +43,7 @@ The API will be available at `http://localhost:8001/docs`. Reports are written t
 ## Analyze A Screenshot
 
 ```bash
-curl -X POST http://localhost:8001/api/v1/analyze -F "file=@C:\path\to\screenshot.png"
+curl -X POST http://localhost:8001/api/v1/analyze \-F "file=@C:\path\to\screenshot.png"
 ```
 
 ## Output
