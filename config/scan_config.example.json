@@ -1,0 +1,43 @@
+{
+  "target_url": "https://the-internet.herokuapp.com",
+  "auth": {
+    "login_url": "https://the-internet.herokuapp.com/login",
+    "username_selector": "#username",
+    "password_selector": "#password",
+    "submit_selector": "button[type=submit]",
+    "success_indicator": ".flash.success",
+    "username": "SCAN_USERNAME",
+    "password": "SCAN_PASSWORD"
+  },
+  "pages": [
+    {
+      "page_id": "secure_home",
+      "url": "/secure",
+      "name": "Authenticated Secure Area",
+      "dynamic_selectors": [".flash"],
+      "scroll_to_top": true,
+      "wait_for_selector": ".flash.success"
+    },
+    {
+      "page_id": "checkboxes",
+      "url": "/checkboxes",
+      "name": "Checkboxes",
+      "dynamic_selectors": ["footer"],
+      "scroll_to_top": true,
+      "wait_for_selector": "form#checkboxes"
+    },
+    {
+      "page_id": "login_form",
+      "url": "/login",
+      "name": "Form Authentication",
+      "dynamic_selectors": [".flash", "footer"],
+      "scroll_to_top": true,
+      "wait_for_selector": "#login"
+    }
+  ],
+  "viewport_width": 1440,
+  "viewport_height": 900,
+  "wait_after_navigation_ms": 1500,
+  "baseline_dir": "output/baselines",
+  "scan_output_dir": "output/scans"
+}

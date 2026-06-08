@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Regression Scan {{ report.scan_id }}</title>
+  <style>
+    body { margin: 0; background: #f7f8fb; color: #1f2933; font-family: Segoe UI, Arial, sans-serif; }
+    main { max-width: 1120px; margin: 0 auto; padding: 32px 20px; }
+    h1 { margin: 0 0 6px; font-size: 28px; }
+    h2 { margin: 28px 0 12px; font-size: 19px; }
+    .meta { color: #607083; margin-bottom: 20px; }
+    .panel, .page, .finding { background: #fff; border: 1px solid #dbe2ea; border-radius: 8px; padding: 16px; }
+    .status-pass { border-color: #22c55e; background: #f0fdf4; }
+    .status-regression { border-color: #ef4444; background: #fef2f2; }
+    .status-error { border-color: #f97316; background: #fff7ed; }
+    .status-baseline_created { border-color: #3b82f6; background: #eff6ff; }
+    .counts { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+    .pill, .badge { border-radius: 999px; padding: 4px 9px; font-size: 12px; font-weight: 700; }
+    .pill { background: #eef2f7; }
+    .page { margin-bottom: 16px; }
+    .finding { margin-top: 12px; }
+    .finding-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .improvement { background: #dcfce7; color: #166534; }
+    .regression { background: #fee2e2; color: #991b1b; }
+    .neutral { background: #e2e8f0; color: #334155; }
+    .critical, .high { background: #ffedd5; color: #9a3412; }
+    .medium { background: #fef9c3; color: #854d0e; }
+    .low, .info { background: #dbeafe; color: #1e40af; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+    .box { background: #f8fafc; border-radius: 6px; padding: 12px; }
+    dt { margin-top: 10px; font-weight: 700; }
+    dd { margin: 4px 0 0; line-height: 1.45; }
+    details { margin-top: 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Autonomous Regression Scan</h1>
+  <div class="meta">{{ report.target_url }} | {{ report.scan_id }}</div>
+
+  <section class="panel status-{{ report.overall_status }}">
+    <strong>Status: {{ report.overall_status }}</strong>
+    <div class="counts">
+      <span class="pill">{{ report.pages_scanned }} pages scanned</span>
+      <span class="pill">{{ report.pages_with_regressions }} pages with regressions</span>
+      <span class="pill">{{ report.pages_with_errors }} pages with errors</span>
+      <span class="pill">{{ report.total_duration_seconds }}s</span>
+    </div>
+    <p>Model: {{ report.llm_model_used }}</p>
+  </section>
+
+  <h2>Pages</h2>
+  {% for page in report.page_results %}
+  {% set page_status = "error" if page.error else ("baseline_created" if not page.comparison_report else page.comparison_report.verdict.net_result.value) %}
+  <article class="page status-{{ page_status }}">
+    <h3>{{ page.page_id }}{% if page.page_title %}: {{ page.page_title }}{% endif %}</h3>
+    <div class="meta">{{ page.page_url }}</div>
+    <div class="counts">
+      <span class="pill">Status: {{ page_status }}</span>
+      <span class="pill">{{ page.dynamic_regions_filtered }} dynamic regions filtered</span>
+      {% if page.pixel_diff_percentage is not none %}
+      <span class="pill">{{ page.pixel_diff_percentage }}% pixel diff</span>
+      {% endif %}
+      <span class="pill">{{ page.scan_duration_seconds }}s</span>
+    </div>
+
+    {% if page.error %}
+    <p><strong>Error:</strong> {{ page.error }}</p>
+    {% elif not page.comparison_report %}
+    <p>Baseline was created or no significant visual diff was detected, so no LLM comparison was run.</p>
+    {% else %}
+    <p><strong>Verdict:</strong> {{ page.comparison_report.verdict.net_result.value }}</p>
+    <p>{{ page.comparison_report.verdict.summary }}</p>
+    {% for finding in page.comparison_report.findings %}
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge {{ finding.change_direction.value }}">{{ finding.change_direction.value }}</span>
+        <span class="badge {{ finding.severity.value }}">{{ finding.severity.value }}</span>
+        <strong>{{ finding.finding_id }}</strong>
+        <span>{{ finding.principle.value }}</span>
+      </div>
+      <div class="grid">
+        <div class="box"><strong>Baseline</strong><br>{{ finding.baseline_description }}</div>
+        <div class="box"><strong>Current</strong><br>{{ finding.current_description }}</div>
+      </div>
+      <dl>
+        <dt>Location</dt><dd>{{ finding.location }}</dd>
+        <dt>Change</dt><dd>{{ finding.change_summary }}</dd>
+        <dt>UX Impact</dt><dd>{{ finding.ux_impact }}</dd>
+        <dt>Reasoning</dt><dd>{{ finding.reasoning }}</dd>
+        <dt>Confidence</dt><dd>{{ finding.confidence }}%</dd>
+        {% if finding.pixel_measurements %}
+        <dt>Evidence</dt><dd>{{ finding.pixel_measurements }}</dd>
+        {% endif %}
+      </dl>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <details>
+      <summary>Decision Trace</summary>
+      <ul>
+        {% for item in page.decision_trace %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    </details>
+  </article>
+  {% endfor %}
+
+  <details>
+    <summary>Scan Decision Trace</summary>
+    <ul>
+      {% for item in report.decision_trace %}<li>{{ item }}</li>{% endfor %}
+    </ul>
+  </details>
+</main>
+</body>
+</html>

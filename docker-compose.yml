@@ -1,0 +1,43 @@
+services:
+  api:
+    build: .
+    image: design-audit-agent:latest
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    volumes:
+      - ./output:/app/output
+      - ./config:/app/config
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/api/v1/health', timeout=5)"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  ui:
+    build: .
+    image: design-audit-agent:latest
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      STREAMLIT_API_BASE: http://api:8001
+    volumes:
+      - ./output:/app/output
+      - ./config:/app/config
+    command:
+      [
+        "streamlit",
+        "run",
+        "frontend/audit_workbench.py",
+        "--server.address=0.0.0.0",
+        "--server.port=8501",
+        "--browser.gatherUsageStats=false"
+      ]
+    restart: unless-stopped

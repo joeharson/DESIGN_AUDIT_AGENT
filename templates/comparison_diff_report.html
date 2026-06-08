@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design Diff {{ report.report_id }}</title>
+  <style>
+    body { margin: 0; background: #f7f8fb; color: #1f2933; font-family: Segoe UI, Arial, sans-serif; }
+    main { max-width: 1080px; margin: 0 auto; padding: 32px 20px; }
+    h1 { margin: 0 0 6px; font-size: 28px; }
+    h2 { margin: 28px 0 12px; font-size: 19px; }
+    .meta { color: #607083; margin-bottom: 20px; }
+    .verdict, .finding { background: #fff; border: 1px solid #dbe2ea; border-radius: 8px; padding: 16px; }
+    .verdict.improvement { border-color: #22c55e; background: #f0fdf4; }
+    .verdict.regression { border-color: #ef4444; background: #fef2f2; }
+    .verdict.neutral { border-color: #94a3b8; background: #f8fafc; }
+    .counts { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+    .pill, .badge { border-radius: 999px; padding: 4px 9px; font-size: 12px; font-weight: 700; }
+    .pill { background: #eef2f7; }
+    .finding { margin-bottom: 14px; }
+    .finding-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .improvement { background: #dcfce7; color: #166534; }
+    .regression { background: #fee2e2; color: #991b1b; }
+    .neutral { background: #e2e8f0; color: #334155; }
+    .critical, .high { background: #ffedd5; color: #9a3412; }
+    .medium { background: #fef9c3; color: #854d0e; }
+    .low, .info { background: #dbeafe; color: #1e40af; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+    .box { background: #f8fafc; border-radius: 6px; padding: 12px; }
+    dt { margin-top: 10px; font-weight: 700; }
+    dd { margin: 4px 0 0; line-height: 1.45; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Design Diff Report</h1>
+  <div class="meta">{{ report.baseline_filename }} -> {{ report.current_filename }} | {{ report.report_id }}</div>
+
+  <section class="verdict {{ report.verdict.net_result.value }}">
+    <strong>Verdict: {{ report.verdict.net_result.value }}</strong>
+    <div class="counts">
+      <span class="pill">{{ report.verdict.improvement_count }} improvements</span>
+      <span class="pill">{{ report.verdict.regression_count }} regressions</span>
+      <span class="pill">{{ report.verdict.neutral_count }} neutral</span>
+      <span class="pill">{{ report.verdict.accessibility_regressions_count }} accessibility regressions</span>
+      <span class="pill">{{ report.llm_attempts }} LLM attempts</span>
+    </div>
+    <p>{{ report.verdict.summary }}</p>
+    <p><strong>Recommendation:</strong> {{ report.verdict.recommendation }}</p>
+  </section>
+
+  {% if report.agent_notes %}
+  <h2>Agent Notes</h2>
+  <div class="finding">{{ report.agent_notes }}</div>
+  {% endif %}
+
+  <h2>Findings</h2>
+  {% for finding in report.findings %}
+  <article class="finding">
+    <div class="finding-head">
+      <span class="badge {{ finding.change_direction.value }}">{{ finding.change_direction.value }}</span>
+      <span class="badge {{ finding.severity.value }}">{{ finding.severity.value }}</span>
+      <strong>{{ finding.finding_id }}</strong>
+      <span>{{ finding.principle.value }}</span>
+      {% if finding.accessibility_regression.value != "none" %}
+      <span class="badge regression">{{ finding.accessibility_regression.value }}</span>
+      {% endif %}
+    </div>
+    <div class="grid">
+      <div class="box"><strong>Baseline</strong><br>{{ finding.baseline_description }}</div>
+      <div class="box"><strong>Current</strong><br>{{ finding.current_description }}</div>
+    </div>
+    <dl>
+      <dt>Location</dt><dd>{{ finding.location }}</dd>
+      <dt>Change</dt><dd>{{ finding.change_summary }}</dd>
+      <dt>UX Impact</dt><dd>{{ finding.ux_impact }}</dd>
+      <dt>Reasoning</dt><dd>{{ finding.reasoning }}</dd>
+      <dt>Confidence</dt><dd>{{ finding.confidence }}%</dd>
+    </dl>
+  </article>
+  {% endfor %}
+</main>
+</body>
+</html>
