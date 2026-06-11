@@ -244,3 +244,4 @@ The LEVEL3 source files were renamed to match the naming style established by pr
 | `utils/screenshot_image_processing.py` | image validation, resizing, and encoding |
 | `utils/structured_event_logging.py` | structured JSON logging |
 | `frontend/audit_workbench.py` | Streamlit operator UI |
+
